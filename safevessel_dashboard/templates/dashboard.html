@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SafeVessel — Console de bord</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="topbar__id">
+      <span class="topbar__mark">SV</span>
+      <div>
+        <p class="topbar__title">SafeVessel</p>
+        <p class="topbar__subtitle">Console de gestion des incidents critiques</p>
+      </div>
+    </div>
+    <div class="topbar__status">
+      <span id="connIndicator" class="conn-dot conn-dot--off"></span>
+      <span id="connLabel">connexion…</span>
+      <span class="topbar__clock" id="clock">--:--:--</span>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="panel panel--state" aria-label="État actuel">
+      <h2 class="panel__title">État actuel</h2>
+      <div id="currentState" class="state-card state-card--normal">
+        <p class="state-card__label">Système normal</p>
+        <p class="state-card__sub">Aucun incident actif</p>
+      </div>
+
+      <h2 class="panel__title panel__title--spaced">File d'attente</h2>
+      <ul id="queueList" class="queue-list">
+        <li class="queue-list__empty">Aucun incident en attente</li>
+      </ul>
+    </section>
+
+    <section class="panel panel--log" aria-label="Journal des événements">
+      <div class="panel__header">
+        <h2 class="panel__title">Journal des événements</h2>
+        <div class="panel__actions">
+          <button id="btnExport" class="btn btn--ghost" type="button">Exporter (CSV)</button>
+          <button id="btnClear" class="btn btn--danger" type="button">Vider le journal</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table class="log-table">
+          <thead>
+            <tr>
+              <th>Heure</th>
+              <th>Événement</th>
+              <th>Incident</th>
+              <th>Niveau</th>
+              <th>Détails</th>
+            </tr>
+          </thead>
+          <tbody id="logBody">
+            <tr><td colspan="5" class="log-table__empty">En attente des premiers événements…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>
+      SafeVessel — Workshop ESA Horizon 2080
+      {% if simulate %}
+        · mode simulation (aucun matériel requis)
+      {% else %}
+        · lecture du port série {{ port }}
+      {% endif %}
+    </p>
+  </footer>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

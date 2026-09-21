@@ -1,0 +1,21 @@
+[Unit]
+Description=SafeVessel Dashboard
+After=network.target
+
+[Service]
+# Adaptez le chemin si vous n'avez pas copie le projet dans /home/pi
+WorkingDirectory=/home/pi/safevessel_dashboard
+ExecStart=/home/pi/safevessel_dashboard/venv/bin/python3 app.py
+Restart=always
+RestartSec=3
+
+# Decommentez et adaptez si besoin :
+# Environment=SAFEVESSEL_PORT=/dev/ttyACM0
+# Environment=SAFEVESSEL_BAUD=9600
+# Environment=SAFEVESSEL_HTTP_PORT=5000
+# Environment=SAFEVESSEL_SIMULATE=1
+
+User=pi
+
+[Install]
+WantedBy=multi-user.target
