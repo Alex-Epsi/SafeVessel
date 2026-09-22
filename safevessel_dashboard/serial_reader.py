@@ -10,6 +10,7 @@ Formats de lignes produits par SafeVessel.ino :
 Toute autre ligne est journalisee telle quelle en tant qu'evenement INFO.
 """
 import re
+import threading
 import time
 
 from state import state, INCIDENT_LEVELS
@@ -19,6 +20,24 @@ RE_DETECTION = re.compile(r"^\[DETECTION\]\s*(.+?)\s*-\s*t=(\d+)$")
 RE_ESCALADE = re.compile(r"^\[ESCALADE\]\s*(.+)$")
 RE_RESOLUTION = re.compile(r"^\[RESOLUTION\]\s*(.+?)\s*-\s*duree\(ms\)=(\d+)\s*-\s*escalade=(oui|non)$")
 RE_FILE_ATTENTE = re.compile(r"^\[FILE D'ATTENTE\]")
+
+# Reference partagee vers la connexion serie ouverte, pour pouvoir lui ecrire
+# des commandes (ex: RESET) depuis les routes Flask, sans ouvrir un 2e port.
+_serial_lock = threading.Lock()
+_current_serial = None
+
+
+def send_command(command: str) -> bool:
+    """Envoie une commande texte a l'Arduino via le port serie deja ouvert.
+    Retourne True si l'envoi a reussi, False si aucun port n'est connecte."""
+    with _serial_lock:
+        if _current_serial is None or not _current_serial.is_open:
+            return False
+        try:
+            _current_serial.write((command + "\n").encode("utf-8"))
+            return True
+        except Exception:
+            return False
 
 
 def parse_line(line: str):
@@ -61,11 +80,14 @@ def parse_line(line: str):
 
 def run_serial_loop(port: str, baud: int, stop_event):
     """Boucle de connexion/lecture au port serie, avec reconnexion automatique."""
+    global _current_serial
     import serial  # import local : evite de casser le mode simulation si pyserial absent
 
     while not stop_event.is_set():
         try:
             with serial.Serial(port, baud, timeout=1) as ser:
+                with _serial_lock:
+                    _current_serial = ser
                 state.set_connected(True)
                 log_event("INFO", "-", "-", f"connecte au port serie {port}")
                 while not stop_event.is_set():
@@ -79,4 +101,6 @@ def run_serial_loop(port: str, baud: int, stop_event):
                     parse_line(line)
         except Exception as exc:  # port absent, deconnexion, permissions...
             state.set_connected(False)
+            with _serial_lock:
+                _current_serial = None
             time.sleep(3)  # nouvelle tentative dans 3s

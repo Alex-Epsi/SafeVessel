@@ -103,6 +103,23 @@ function tickClock() {
   document.getElementById("clock").textContent = new Date().toLocaleTimeString("fr-FR");
 }
 
+document.getElementById("btnReset").addEventListener("click", async () => {
+  if (!window.confirm("Réinitialiser toutes les alertes en cours sur l'Arduino ?")) {
+    return;
+  }
+  try {
+    const res = await fetch("/api/reset", { method: "POST" });
+    const data = await res.json();
+    if (!data.ok) {
+      alert("Échec : " + (data.error || "Arduino non joignable"));
+    }
+    pollStatus();
+    pollLogs();
+  } catch (e) {
+    alert("Impossible de contacter le serveur.");
+  }
+});
+
 document.getElementById("btnExport").addEventListener("click", () => {
   window.location.href = "/api/logs/export";
 });

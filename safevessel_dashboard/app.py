@@ -16,6 +16,7 @@ from flask import Flask, render_template, jsonify, request, Response
 
 from state import state
 from db import init_db, fetch_events, clear_events, export_csv
+import serial_reader
 from serial_reader import run_serial_loop
 from simulate import run_simulation_loop
 
@@ -37,6 +38,18 @@ def dashboard():
 @app.route("/api/status")
 def api_status():
     return jsonify(state.snapshot())
+
+
+@app.route("/api/reset", methods=["POST"])
+def api_reset():
+    if SIMULATE:
+        state.reset_all()
+        return jsonify({"ok": True})
+
+    ok = serial_reader.send_command("RESET")
+    if not ok:
+        return jsonify({"ok": False, "error": "Arduino non connecté"}), 503
+    return jsonify({"ok": True})
 
 
 @app.route("/api/logs")

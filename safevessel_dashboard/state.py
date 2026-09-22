@@ -42,6 +42,13 @@ class VesselState:
         with self._lock:
             self.active.pop(name, None)
 
+    def reset_all(self):
+        """Vide tous les incidents actifs d'un coup (bouton reset du dashboard,
+        utilise uniquement en mode simulation — en mode reel c'est l'Arduino
+        qui decide et confirme via ses propres messages [RESOLUTION])."""
+        with self._lock:
+            self.active = {}
+
     def snapshot(self):
         with self._lock:
             items = [{"name": n, **v} for n, v in self.active.items()]
