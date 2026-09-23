@@ -47,7 +47,7 @@ def ensure_default_admin():
         if count == 0:
             conn.execute(
                 "INSERT INTO users (username, password_hash) VALUES (?, ?)",
-                (username, generate_password_hash(password)),   
+                (username, generate_password_hash(password)),
             )
             conn.commit()
             print(f"[auth] Compte admin cree : {username} / {password}  (pensez a le changer !)")
@@ -84,4 +84,4 @@ def login_required(view_func):
                 return jsonify({"ok": False, "error": "Authentification requise"}), 401
             return redirect(url_for("login", next=request.path))
         return view_func(*args, **kwargs)
-    return wrapped  
+    return wrapped

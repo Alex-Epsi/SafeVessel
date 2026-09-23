@@ -48,6 +48,7 @@ _started = False
 
 
 @app.route("/")
+@auth.login_required
 def dashboard():
     return render_template(
         "dashboard.html", simulate=SIMULATE, port=SERIAL_PORT, username=session.get("username")
@@ -55,6 +56,7 @@ def dashboard():
 
 
 @app.route("/historique")
+@auth.login_required
 def historique():
     return render_template("historique.html", username=session.get("username"))
 
@@ -79,11 +81,13 @@ def logout():
 
 
 @app.route("/api/status")
+@auth.login_required
 def api_status():
     return jsonify(state.snapshot())
 
 
 @app.route("/api/stats")
+@auth.login_required
 def api_stats():
     return jsonify(fetch_stats())
 
@@ -139,6 +143,7 @@ def api_reset():
 
 
 @app.route("/api/logs")
+@auth.login_required
 def api_logs():
     limit = int(request.args.get("limit", 200))
     return jsonify(fetch_events(limit=limit))
@@ -152,6 +157,7 @@ def api_logs_clear():
 
 
 @app.route("/api/logs/export")
+@auth.login_required
 def api_logs_export():
     csv_data = export_csv()
     return Response(

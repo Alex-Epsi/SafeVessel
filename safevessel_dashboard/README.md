@@ -41,7 +41,7 @@ idéal pour avancer sur l'interface pendant que le câblage n'est pas encore pr�
    droit de lire le port série sans `sudo` :
    ```bash
    sudo usermod -a -G dialout pi
-   # puis redémarrez la session (ou le Pi)   
+   # puis redémarrez la session (ou le Pi)
    ```
 
 4. **Lancer le dashboard** en pointant vers le bon port :
