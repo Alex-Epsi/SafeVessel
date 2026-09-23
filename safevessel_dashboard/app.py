@@ -10,15 +10,17 @@ Acces depuis un navigateur (PC ou telephone sur le meme reseau) :
   http://<ip_du_raspberry>:5000
 """
 import os
+import secrets
 import threading
 
-from flask import Flask, render_template, jsonify, request, Response
+from flask import Flask, render_template, jsonify, request, Response, session, redirect, url_for
 
 from state import state
-from db import init_db, fetch_events, clear_events, export_csv
+from db import init_db, fetch_events, clear_events, export_csv, log_event
 import serial_reader
 from serial_reader import run_serial_loop
 from simulate import run_simulation_loop
+import auth
 
 SIMULATE = os.environ.get("SAFEVESSEL_SIMULATE", "0") == "1"
 SERIAL_PORT = os.environ.get("SAFEVESSEL_PORT", "/dev/ttyACM0")
@@ -26,13 +28,39 @@ SERIAL_BAUD = int(os.environ.get("SAFEVESSEL_BAUD", "9600"))
 HTTP_PORT = int(os.environ.get("SAFEVESSEL_HTTP_PORT", "5000"))
 
 app = Flask(__name__)
+# Cle de session : fixe-la via SAFEVESSEL_SECRET_KEY pour que les connexions
+# survivent aux redemarrages du service ; sinon une cle aleatoire est
+# generee a chaque demarrage (tout le monde est deconnecte au redemarrage).
+app.secret_key = os.environ.get("SAFEVESSEL_SECRET_KEY", secrets.token_hex(32))
+
 _stop_event = threading.Event()
 _started = False
 
 
 @app.route("/")
 def dashboard():
-    return render_template("dashboard.html", simulate=SIMULATE, port=SERIAL_PORT)
+    return render_template(
+        "dashboard.html", simulate=SIMULATE, port=SERIAL_PORT, username=session.get("username")
+    )
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        username = request.form.get("username", "")
+        password = request.form.get("password", "")
+        if auth.verify_login(username, password):
+            session["username"] = username
+            next_url = request.args.get("next") or url_for("dashboard")
+            return redirect(next_url)
+        return render_template("login.html", error="Identifiant ou mot de passe incorrect.")
+    return render_template("login.html", error=None)
+
+
+@app.route("/logout", methods=["POST"])
+def logout():
+    session.pop("username", None)
+    return redirect(url_for("dashboard"))
 
 
 @app.route("/api/status")
@@ -40,7 +68,20 @@ def api_status():
     return jsonify(state.snapshot())
 
 
+@app.route("/api/clear_cache", methods=["POST"])
+@auth.login_required
+def api_clear_cache():
+    # Vide uniquement l'etat affiche (incident en cours + file d'attente),
+    # sans envoyer aucune commande a l'Arduino et sans toucher au journal.
+    # A utiliser si l'affichage semble bloque sur une alerte qui n'existe
+    # plus reellement, typiquement apres une coupure du cable USB.
+    state.reset_all()
+    log_event("INFO", "-", "-", "Cache d'affichage vide manuellement depuis le dashboard")
+    return jsonify({"ok": True})
+
+
 @app.route("/api/reset", methods=["POST"])
+@auth.login_required
 def api_reset():
     if SIMULATE:
         state.reset_all()
@@ -59,6 +100,7 @@ def api_logs():
 
 
 @app.route("/api/logs/clear", methods=["POST"])
+@auth.login_required
 def api_logs_clear():
     clear_events()
     return jsonify({"ok": True})
@@ -80,6 +122,8 @@ def start_background_worker():
         return
     _started = True
     init_db()
+    auth.init_auth_db()
+    auth.ensure_default_admin()
     if SIMULATE:
         threading.Thread(target=run_simulation_loop, args=(_stop_event,), daemon=True).start()
     else:
@@ -93,4 +137,4 @@ start_background_worker()
 if __name__ == "__main__":
     mode = "SIMULATION" if SIMULATE else f"serie ({SERIAL_PORT} @ {SERIAL_BAUD} bauds)"
     print(f"SafeVessel dashboard — mode {mode} — http://0.0.0.0:{HTTP_PORT}")
-    app.run(host="0.0.0.0", port=HTTP_PORT, debug=False)
+    app.run(host="0.0.0.0", port=HTTP_PORT, debug=False)    

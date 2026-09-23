@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SafeVessel — Connexion</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="login-wrap">
+    <div class="panel login-panel">
+      <div class="topbar__id" style="margin-bottom: 20px;">
+        <span class="topbar__mark">SV</span>
+        <div>
+          <p class="topbar__title">SafeVessel</p>
+          <p class="topbar__subtitle">Connexion requise pour cette action</p>
+        </div>
+      </div>
+
+      {% if error %}
+        <p class="login-error">{{ error }}</p>
+      {% endif %}
+
+      <form method="post" class="login-form">
+        <label class="login-label" for="username">Identifiant</label>
+        <input class="login-input" type="text" id="username" name="username" autocomplete="username" required autofocus>
+
+        <label class="login-label" for="password">Mot de passe</label>
+        <input class="login-input" type="password" id="password" name="password" autocomplete="current-password" required>
+
+        <button class="btn btn--primary btn--full" type="submit">Se connecter</button>
+      </form>
+
+      <p class="login-hint">La consultation du dashboard reste libre — seules les actions (réinitialiser, vider le journal…) nécessitent un compte.</p>
+    </div>
+  </div>
+</body>
+</html>

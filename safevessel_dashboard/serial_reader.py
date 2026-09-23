@@ -89,6 +89,20 @@ def run_serial_loop(port: str, baud: int, stop_event):
                 with _serial_lock:
                     _current_serial = ser
                 state.set_connected(True)
+
+                # Correction du bug de "cache" : une reconnexion serie reset
+                # presque toujours physiquement l'Arduino (comportement standard
+                # de l'Uno a l'ouverture du port). Son etat reel est donc
+                # "normal" a ce moment precis, meme si le Raspberry Pi avait
+                # encore une alerte en memoire suite a la coupure. On
+                # resynchronise systematiquement pour eviter une alerte
+                # fantome bloquee jusqu'au prochain redemarrage du service.
+                snap = state.snapshot()
+                if snap["current"] is not None or snap["queue"]:
+                    log_event("INFO", "-", "-",
+                              "Reconnexion detectee : alerte(s) en cache effacee(s) pour resynchronisation")
+                    state.reset_all()
+
                 log_event("INFO", "-", "-", f"connecte au port serie {port}")
                 while not stop_event.is_set():
                     raw = ser.readline()

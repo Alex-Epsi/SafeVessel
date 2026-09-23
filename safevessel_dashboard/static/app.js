@@ -103,33 +103,51 @@ function tickClock() {
   document.getElementById("clock").textContent = new Date().toLocaleTimeString("fr-FR");
 }
 
-document.getElementById("btnReset").addEventListener("click", async () => {
+async function requireAuthThen(fetchPromise, onOk) {
+  try {
+    const res = await fetchPromise;
+    if (res.status === 401) {
+      window.location.href = "/login?next=/";
+      return;
+    }
+    const data = await res.json().catch(() => ({}));
+    onOk(res, data);
+  } catch (e) {
+    alert("Impossible de contacter le serveur.");
+  }
+}
+
+document.getElementById("btnClearCache").addEventListener("click", () => {
+  requireAuthThen(fetch("/api/clear_cache", { method: "POST" }), () => {
+    pollStatus();
+    pollLogs();
+  });
+});
+
+document.getElementById("btnReset").addEventListener("click", () => {
   if (!window.confirm("Réinitialiser toutes les alertes en cours sur l'Arduino ?")) {
     return;
   }
-  try {
-    const res = await fetch("/api/reset", { method: "POST" });
-    const data = await res.json();
+  requireAuthThen(fetch("/api/reset", { method: "POST" }), (res, data) => {
     if (!data.ok) {
       alert("Échec : " + (data.error || "Arduino non joignable"));
     }
     pollStatus();
     pollLogs();
-  } catch (e) {
-    alert("Impossible de contacter le serveur.");
-  }
+  });
 });
 
 document.getElementById("btnExport").addEventListener("click", () => {
   window.location.href = "/api/logs/export";
 });
 
-document.getElementById("btnClear").addEventListener("click", async () => {
+document.getElementById("btnClear").addEventListener("click", () => {
   if (!window.confirm("Vider tout le journal des événements ? Cette action est irréversible.")) {
     return;
   }
-  await fetch("/api/logs/clear", { method: "POST" });
-  pollLogs();
+  requireAuthThen(fetch("/api/logs/clear", { method: "POST" }), () => {
+    pollLogs();
+  });
 });
 
 pollStatus();

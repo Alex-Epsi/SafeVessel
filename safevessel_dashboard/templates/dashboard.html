@@ -20,6 +20,16 @@
       <span id="connIndicator" class="conn-dot conn-dot--off"></span>
       <span id="connLabel">connexion…</span>
       <span class="topbar__clock" id="clock">--:--:--</span>
+      <span class="topbar__user">
+        {% if username %}
+          {{ username }}
+          <form method="post" action="{{ url_for('logout') }}" style="display:inline;">
+            <a href="#" onclick="this.closest('form').submit(); return false;">Déconnexion</a>
+          </form>
+        {% else %}
+          <a href="{{ url_for('login') }}">Se connecter</a>
+        {% endif %}
+      </span>
     </div>
   </header>
 
@@ -31,6 +41,7 @@
         <p class="state-card__sub">Aucun incident actif</p>
       </div>
       <button id="btnReset" class="btn btn--danger btn--full" type="button">Réinitialiser les alertes</button>
+      <button id="btnClearCache" class="btn btn--ghost btn--full" type="button">🔄 Resynchroniser l'affichage</button>
 
       <h2 class="panel__title panel__title--spaced">File d'attente</h2>
       <ul id="queueList" class="queue-list">
