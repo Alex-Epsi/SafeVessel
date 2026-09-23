@@ -15,7 +15,7 @@ import threading
 
 from flask import Flask, render_template, jsonify, request, Response, session, redirect, url_for
 
-from state import state
+from state import state, sensor_state
 from db import init_db, fetch_events, clear_events, export_csv, log_event, fetch_stats
 import serial_reader
 from serial_reader import run_serial_loop
@@ -84,6 +84,12 @@ def logout():
 @auth.login_required
 def api_status():
     return jsonify(state.snapshot())
+
+
+@app.route("/api/sensors")
+@auth.login_required
+def api_sensors():
+    return jsonify(sensor_state.snapshot())
 
 
 @app.route("/api/stats")

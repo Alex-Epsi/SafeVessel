@@ -6,10 +6,31 @@ import random
 import threading
 import time
 
-from state import state, INCIDENT_LEVELS
+from state import state, sensor_state, INCIDENT_LEVELS
 from db import log_event
 
 NAMES = list(INCIDENT_LEVELS.keys())
+
+
+def _simuler_capteurs_loop(stop_event):
+    """Genere des valeurs de capteurs plausibles qui varient doucement,
+    pour que le panneau 'Capteurs en direct' du dashboard ait quelque
+    chose a afficher meme sans materiel branche."""
+    temperature = 23.0
+    eco2 = 420.0
+    while not stop_event.is_set():
+        temperature += random.uniform(-0.3, 0.3)
+        eco2 += random.uniform(-15, 15)
+        eco2 = max(400, eco2)
+        sensor_state.update({
+            "T": round(temperature, 1),
+            "H": round(45 + random.uniform(-3, 3), 1),
+            "ECO2": round(eco2),
+            "TVOC": round(max(0, eco2 - 400) / 4),
+            "AIR": 0,
+            "PIR": 0,
+        })
+        time.sleep(1)
 
 
 def _resolve_later(name: str, level: str):
@@ -30,6 +51,7 @@ def _resolve_later(name: str, level: str):
 def run_simulation_loop(stop_event):
     state.set_connected(True)
     log_event("INFO", "-", "-", "mode simulation actif (pas de materiel reel)")
+    threading.Thread(target=_simuler_capteurs_loop, args=(stop_event,), daemon=True).start()
 
     while not stop_event.is_set():
         time.sleep(random.uniform(5, 10))

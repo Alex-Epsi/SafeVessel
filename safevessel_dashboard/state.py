@@ -66,3 +66,29 @@ class VesselState:
 
 
 state = VesselState()
+
+
+class SensorState:
+    """Dernieres valeurs brutes des capteurs, rapportees periodiquement par
+    l'Arduino (ligne [CAPTEURS] du journal serie)."""
+
+    def __init__(self):
+        self._lock = threading.Lock()
+        self.values = {}
+        self.last_update = None
+
+    def update(self, values: dict):
+        with self._lock:
+            self.values = values
+            self.last_update = time.time()
+
+    def snapshot(self):
+        with self._lock:
+            return {
+                "values": dict(self.values),
+                "last_update": self.last_update,
+                "server_time": time.time(),
+            }
+
+
+sensor_state = SensorState()

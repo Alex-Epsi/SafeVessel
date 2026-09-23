@@ -13,13 +13,15 @@ import re
 import threading
 import time
 
-from state import state, INCIDENT_LEVELS
+from state import state, sensor_state, INCIDENT_LEVELS
 from db import log_event
 
 RE_DETECTION = re.compile(r"^\[DETECTION\]\s*(.+?)\s*-\s*t=(\d+)$")
 RE_ESCALADE = re.compile(r"^\[ESCALADE\]\s*(.+)$")
 RE_RESOLUTION = re.compile(r"^\[RESOLUTION\]\s*(.+?)\s*-\s*duree\(ms\)=(\d+)\s*-\s*escalade=(oui|non)$")
 RE_FILE_ATTENTE = re.compile(r"^\[FILE D'ATTENTE\]")
+RE_CAPTEURS = re.compile(r"^\[CAPTEURS\]\s*(.+)$")
+RE_NOMBRE = re.compile(r"[-+]?[0-9]*\.?[0-9]+")
 
 # Reference partagee vers la connexion serie ouverte, pour pouvoir lui ecrire
 # des commandes (ex: RESET) depuis les routes Flask, sans ouvrir un 2e port.
@@ -43,6 +45,22 @@ def send_command(command: str) -> bool:
 def parse_line(line: str):
     line = line.strip()
     if not line:
+        return
+
+    m = RE_CAPTEURS.match(line)
+    if m:
+        # Mise a jour de l'etat en memoire seulement -- pas de log_event ici :
+        # a 1 ligne/seconde, journaliser chaque rapport gonflerait la base
+        # inutilement (le journal reste reserve aux vrais evenements).
+        valeurs = {}
+        for token in m.group(1).split():
+            if "=" not in token:
+                continue
+            cle, brut = token.split("=", 1)
+            nombre = RE_NOMBRE.match(brut)
+            if nombre:
+                valeurs[cle] = float(nombre.group(0))
+        sensor_state.update(valeurs)
         return
 
     m = RE_DETECTION.match(line)

@@ -53,7 +53,7 @@
       <div class="trigger-grid">
         <button class="btn btn--trigger btn--trigger-critique" type="button" data-trigger="air">Fuite d'air</button>
         <button class="btn btn--trigger btn--trigger-haute" type="button" data-trigger="fire">Incendie</button>
-        <button class="btn btn--trigger btn--trigger-haute" type="button" data-trigger="power">Panne élec.</button>
+        <button class="btn btn--trigger btn--trigger-haute" type="button" data-trigger="power">Fuite de gaz</button>
         <button class="btn btn--trigger btn--trigger-moyenne" type="button" data-trigger="intrusion">Intrusion</button>
       </div>
     </section>
@@ -82,6 +82,37 @@
           </tbody>
         </table>
       </div>
+    </section>
+
+    <section class="panel panel--sensors" aria-label="Capteurs en direct">
+      <h2 class="panel__title">Capteurs en direct</h2>
+      <div class="sensor-grid" id="sensorGrid">
+        <div class="sensor-card">
+          <p class="sensor-card__label">Température</p>
+          <p class="sensor-card__value" id="sensorTemp">—</p>
+        </div>
+        <div class="sensor-card">
+          <p class="sensor-card__label">Humidité</p>
+          <p class="sensor-card__value" id="sensorHum">—</p>
+        </div>
+        <div class="sensor-card">
+          <p class="sensor-card__label">eCO2</p>
+          <p class="sensor-card__value" id="sensorEco2">—</p>
+        </div>
+        <div class="sensor-card">
+          <p class="sensor-card__label">TVOC</p>
+          <p class="sensor-card__value" id="sensorTvoc">—</p>
+        </div>
+        <div class="sensor-card">
+          <p class="sensor-card__label">MQ135 (air)</p>
+          <p class="sensor-card__value" id="sensorAir">—</p>
+        </div>
+        <div class="sensor-card">
+          <p class="sensor-card__label">PIR (mouvement)</p>
+          <p class="sensor-card__value" id="sensorPir">—</p>
+        </div>
+      </div>
+      <p class="sensor-updated" id="sensorUpdated"></p>
     </section>
   </main>
 

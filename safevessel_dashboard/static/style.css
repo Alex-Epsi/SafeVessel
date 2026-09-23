@@ -248,6 +248,45 @@ button:focus-visible, a:focus-visible {
 .queue-list__item--haute { border-left: 3px solid var(--haute); }
 .queue-list__item--moyenne { border-left: 3px solid var(--moyenne); }
 
+.panel--sensors {
+  grid-column: 1 / -1;
+}
+
+.sensor-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+}
+
+.sensor-card {
+  background: var(--panel-alt);
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  padding: 12px;
+  text-align: center;
+}
+
+.sensor-card__label {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.sensor-card__value {
+  margin: 6px 0 0;
+  font-size: 20px;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  color: var(--accent);
+}
+
+.sensor-updated {
+  margin: 10px 0 0;
+  font-size: 11px;
+  color: var(--text-faint);
+  text-align: right;
+}
+
 /* ---------- Journal ---------- */
 .table-wrap {
   margin-top: 12px;

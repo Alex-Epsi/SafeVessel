@@ -79,6 +79,37 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
+function renderSensors(data) {
+  const v = data.values || {};
+  const fmt = (val, suffix) => (val === undefined ? "—" : `${val}${suffix}`);
+
+  document.getElementById("sensorTemp").textContent = fmt(v.T, " °C");
+  document.getElementById("sensorHum").textContent = fmt(v.H, " %");
+  document.getElementById("sensorEco2").textContent = fmt(v.ECO2, " ppm");
+  document.getElementById("sensorTvoc").textContent = fmt(v.TVOC, " ppb");
+  document.getElementById("sensorAir").textContent = v.AIR === undefined ? "—" : (v.AIR > 0 ? "Détecté" : "RAS");
+  document.getElementById("sensorPir").textContent = v.PIR === undefined ? "—" : (v.PIR > 0 ? "Mouvement" : "RAS");
+
+  const updatedEl = document.getElementById("sensorUpdated");
+  if (data.last_update) {
+    const secs = Math.max(0, Math.round(data.server_time - data.last_update));
+    updatedEl.textContent = secs <= 2 ? "à l'instant" : `il y a ${secs}s`;
+  } else {
+    updatedEl.textContent = "aucune donnée reçue";
+  }
+}
+
+async function pollSensors() {
+  try {
+    const res = await fetch("/api/sensors");
+    if (res.status === 401) return;
+    const data = await res.json();
+    renderSensors(data);
+  } catch (e) {
+    /* silencieux : on retentera au prochain cycle */
+  }
+}
+
 async function pollStatus() {
   try {
     const res = await fetch("/api/status");
@@ -159,7 +190,9 @@ document.getElementById("btnClear").addEventListener("click", () => {
 
 pollStatus();
 pollLogs();
+pollSensors();
 tickClock();
 setInterval(pollStatus, 1500);
 setInterval(pollLogs, 3000);
+setInterval(pollSensors, 1500);
 setInterval(tickClock, 1000);
