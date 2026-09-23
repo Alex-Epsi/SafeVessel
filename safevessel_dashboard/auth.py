@@ -47,7 +47,7 @@ def ensure_default_admin():
         if count == 0:
             conn.execute(
                 "INSERT INTO users (username, password_hash) VALUES (?, ?)",
-                (username, generate_password_hash(password)),
+                (username, generate_password_hash(password)),   
             )
             conn.commit()
             print(f"[auth] Compte admin cree : {username} / {password}  (pensez a le changer !)")
