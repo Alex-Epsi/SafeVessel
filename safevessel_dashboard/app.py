@@ -16,7 +16,7 @@ import threading
 from flask import Flask, render_template, jsonify, request, Response, session, redirect, url_for
 
 from state import state
-from db import init_db, fetch_events, clear_events, export_csv, log_event
+from db import init_db, fetch_events, clear_events, export_csv, log_event, fetch_stats
 import serial_reader
 from serial_reader import run_serial_loop
 from simulate import run_simulation_loop
@@ -26,6 +26,16 @@ SIMULATE = os.environ.get("SAFEVESSEL_SIMULATE", "0") == "1"
 SERIAL_PORT = os.environ.get("SAFEVESSEL_PORT", "/dev/ttyACM0")
 SERIAL_BAUD = int(os.environ.get("SAFEVESSEL_BAUD", "9600"))
 HTTP_PORT = int(os.environ.get("SAFEVESSEL_HTTP_PORT", "5000"))
+
+# Incidents declenchables depuis le dashboard : meme commande que celle
+# ecoutee par SafeVessel_complet.ino (lireCommandeSerie). La cle est
+# utilisee dans l'URL (/api/trigger/<cle>) et par les boutons du site.
+INCIDENT_TRIGGERS = {
+    "air":       {"command": "TRIGGER_AIR",       "name": "Fuite d'air (O2)",    "level": "critique"},
+    "fire":      {"command": "TRIGGER_FIRE",       "name": "Incendie",            "level": "haute"},
+    "power":     {"command": "TRIGGER_POWER",      "name": "Panne electrique",    "level": "haute"},
+    "intrusion": {"command": "TRIGGER_INTRUSION",  "name": "Intrusion",           "level": "moyenne"},
+}
 
 app = Flask(__name__)
 # Cle de session : fixe-la via SAFEVESSEL_SECRET_KEY pour que les connexions
@@ -42,6 +52,11 @@ def dashboard():
     return render_template(
         "dashboard.html", simulate=SIMULATE, port=SERIAL_PORT, username=session.get("username")
     )
+
+
+@app.route("/historique")
+def historique():
+    return render_template("historique.html", username=session.get("username"))
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -68,6 +83,29 @@ def api_status():
     return jsonify(state.snapshot())
 
 
+@app.route("/api/stats")
+def api_stats():
+    return jsonify(fetch_stats())
+
+
+@app.route("/api/trigger/<key>", methods=["POST"])
+@auth.login_required
+def api_trigger(key):
+    info = INCIDENT_TRIGGERS.get(key)
+    if not info:
+        return jsonify({"ok": False, "error": "Incident inconnu"}), 404
+
+    if SIMULATE:
+        state.detected(info["name"], info["level"])
+        log_event("DETECTION", info["name"], info["level"], "declenche depuis le dashboard (simulation)")
+        return jsonify({"ok": True})
+
+    ok = serial_reader.send_command(info["command"])
+    if not ok:
+        return jsonify({"ok": False, "error": "Arduino non connecté"}), 503
+    return jsonify({"ok": True})
+
+
 @app.route("/api/clear_cache", methods=["POST"])
 @auth.login_required
 def api_clear_cache():
@@ -84,6 +122,13 @@ def api_clear_cache():
 @auth.login_required
 def api_reset():
     if SIMULATE:
+        snap = state.snapshot()
+        incidents_actifs = ([snap["current"]] if snap["current"] else []) + snap["queue"]
+        for inc in incidents_actifs:
+            duree_ms = int((state.snapshot()["server_time"] - inc["since"]) * 1000)
+            log_event("RESOLUTION", inc["name"], inc["level"],
+                      "resolu (reset dashboard, simulation)",
+                      duration_ms=duree_ms, escalade=inc.get("escalated", False))
         state.reset_all()
         return jsonify({"ok": True})
 
@@ -137,4 +182,4 @@ start_background_worker()
 if __name__ == "__main__":
     mode = "SIMULATION" if SIMULATE else f"serie ({SERIAL_PORT} @ {SERIAL_BAUD} bauds)"
     print(f"SafeVessel dashboard — mode {mode} — http://0.0.0.0:{HTTP_PORT}")
-    app.run(host="0.0.0.0", port=HTTP_PORT, debug=False)    
+    app.run(host="0.0.0.0", port=HTTP_PORT, debug=False)

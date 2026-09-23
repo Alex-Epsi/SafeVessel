@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SafeVessel — Historique</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="topbar__id">
+      <span class="topbar__mark">SV</span>
+      <div>
+        <p class="topbar__title">SafeVessel</p>
+        <p class="topbar__subtitle">Historique &amp; statistiques</p>
+      </div>
+    </div>
+    <div class="topbar__status">
+      <a class="topbar__nav" href="{{ url_for('dashboard') }}">← Console de bord</a>
+      <span class="topbar__user">
+        {% if username %}
+          {{ username }}
+          <form method="post" action="{{ url_for('logout') }}" style="display:inline;">
+            <a href="#" onclick="this.closest('form').submit(); return false;">Déconnexion</a>
+          </form>
+        {% else %}
+          <a href="{{ url_for('login') }}">Se connecter</a>
+        {% endif %}
+      </span>
+    </div>
+  </header>
+
+  <main class="hist-layout">
+    <section class="hist-cards" id="summaryCards" aria-label="Résumé">
+      <div class="hist-card">
+        <p class="hist-card__value" id="cardTotal">—</p>
+        <p class="hist-card__label">Incidents détectés</p>
+      </div>
+      <div class="hist-card">
+        <p class="hist-card__value" id="cardAvgDuration">—</p>
+        <p class="hist-card__label">Durée moy. de résolution</p>
+      </div>
+      <div class="hist-card">
+        <p class="hist-card__value" id="cardEscalade">—</p>
+        <p class="hist-card__label">Taux d'escalade</p>
+      </div>
+      <div class="hist-card">
+        <p class="hist-card__value" id="cardResolutions">—</p>
+        <p class="hist-card__label">Incidents résolus</p>
+      </div>
+    </section>
+
+    <section class="panel" aria-label="Détail par type d'incident">
+      <h2 class="panel__title">Par type d'incident</h2>
+      <div class="table-wrap">
+        <table class="log-table">
+          <thead>
+            <tr>
+              <th>Incident</th>
+              <th>Détections</th>
+              <th>Résolus</th>
+              <th>Durée moyenne</th>
+              <th>Escalades</th>
+            </tr>
+          </thead>
+          <tbody id="byTypeBody">
+            <tr><td colspan="5" class="log-table__empty">Chargement…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel" aria-label="Répartition par type">
+      <h2 class="panel__title">Répartition des incidents</h2>
+      <div id="barChart"></div>
+    </section>
+
+    <section class="panel" aria-label="Chronologie">
+      <h2 class="panel__title">Chronologie (par heure)</h2>
+      <div id="timelineChart"></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>SafeVessel — Workshop ESA Horizon 2080 · Historique basé sur le journal complet</p>
+  </footer>
+
+  <script src="{{ url_for('static', filename='historique.js') }}"></script>
+</body>
+</html>

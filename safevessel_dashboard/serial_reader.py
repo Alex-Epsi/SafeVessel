@@ -58,7 +58,8 @@ def parse_line(line: str):
         name, duree_ms, escalade = m.group(1), m.group(2), m.group(3)
         level = INCIDENT_LEVELS.get(name, "inconnue")
         state.resolved(name)
-        log_event("RESOLUTION", name, level, f"duree={duree_ms}ms, escalade={escalade}")
+        log_event("RESOLUTION", name, level, f"duree={duree_ms}ms, escalade={escalade}",
+                   duration_ms=int(duree_ms), escalade=(escalade == "oui"))
         return
 
     m = RE_ESCALADE.match(line)

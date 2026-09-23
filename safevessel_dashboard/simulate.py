@@ -13,13 +13,18 @@ NAMES = list(INCIDENT_LEVELS.keys())
 
 
 def _resolve_later(name: str, level: str):
+    t_debut = time.time()
+    escalade_survenue = False
     time.sleep(random.uniform(4, 12))
     if random.random() < 0.35:
+        escalade_survenue = True
         state.escalated(name)
         log_event("ESCALADE", name, level, "action d'escalade (simulation)")
         time.sleep(random.uniform(2, 5))
+    duree_ms = int((time.time() - t_debut) * 1000)
     state.resolved(name)
-    log_event("RESOLUTION", name, level, "resolu (simulation)")
+    log_event("RESOLUTION", name, level, "resolu (simulation)",
+              duration_ms=duree_ms, escalade=escalade_survenue)
 
 
 def run_simulation_loop(stop_event):

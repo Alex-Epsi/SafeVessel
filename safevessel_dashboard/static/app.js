@@ -125,9 +125,6 @@ document.getElementById("btnClearCache").addEventListener("click", () => {
 });
 
 document.getElementById("btnReset").addEventListener("click", () => {
-  if (!window.confirm("Réinitialiser toutes les alertes en cours sur l'Arduino ?")) {
-    return;
-  }
   requireAuthThen(fetch("/api/reset", { method: "POST" }), (res, data) => {
     if (!data.ok) {
       alert("Échec : " + (data.error || "Arduino non joignable"));
@@ -137,14 +134,24 @@ document.getElementById("btnReset").addEventListener("click", () => {
   });
 });
 
+document.querySelectorAll("[data-trigger]").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const key = btn.getAttribute("data-trigger");
+    requireAuthThen(fetch(`/api/trigger/${key}`, { method: "POST" }), (res, data) => {
+      if (!data.ok) {
+        alert("Échec : " + (data.error || "Arduino non joignable"));
+      }
+      pollStatus();
+      pollLogs();
+    });
+  });
+});
+
 document.getElementById("btnExport").addEventListener("click", () => {
   window.location.href = "/api/logs/export";
 });
 
 document.getElementById("btnClear").addEventListener("click", () => {
-  if (!window.confirm("Vider tout le journal des événements ? Cette action est irréversible.")) {
-    return;
-  }
   requireAuthThen(fetch("/api/logs/clear", { method: "POST" }), () => {
     pollLogs();
   });

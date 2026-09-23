@@ -17,6 +17,7 @@
       </div>
     </div>
     <div class="topbar__status">
+      <a class="topbar__nav" href="{{ url_for('historique') }}">📊 Historique</a>
       <span id="connIndicator" class="conn-dot conn-dot--off"></span>
       <span id="connLabel">connexion…</span>
       <span class="topbar__clock" id="clock">--:--:--</span>
@@ -47,6 +48,14 @@
       <ul id="queueList" class="queue-list">
         <li class="queue-list__empty">Aucun incident en attente</li>
       </ul>
+
+      <h2 class="panel__title panel__title--spaced">Déclencher une alerte</h2>
+      <div class="trigger-grid">
+        <button class="btn btn--trigger btn--trigger-critique" type="button" data-trigger="air">Fuite d'air</button>
+        <button class="btn btn--trigger btn--trigger-haute" type="button" data-trigger="fire">Incendie</button>
+        <button class="btn btn--trigger btn--trigger-haute" type="button" data-trigger="power">Panne élec.</button>
+        <button class="btn btn--trigger btn--trigger-moyenne" type="button" data-trigger="intrusion">Intrusion</button>
+      </div>
     </section>
 
     <section class="panel panel--log" aria-label="Journal des événements">
