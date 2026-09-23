@@ -20,7 +20,7 @@ from db import init_db, fetch_events, clear_events, export_csv, log_event
 import serial_reader
 from serial_reader import run_serial_loop
 from simulate import run_simulation_loop
-import auth
+import safevessel_dashboard.auth as auth
 
 SIMULATE = os.environ.get("SAFEVESSEL_SIMULATE", "0") == "1"
 SERIAL_PORT = os.environ.get("SAFEVESSEL_PORT", "/dev/ttyACM0")
