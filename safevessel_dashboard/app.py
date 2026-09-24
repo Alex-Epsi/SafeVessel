@@ -31,7 +31,7 @@ HTTP_PORT = int(os.environ.get("SAFEVESSEL_HTTP_PORT", "5000"))
 # ecoutee par SafeVessel_complet.ino (lireCommandeSerie). La cle est
 # utilisee dans l'URL (/api/trigger/<cle>) et par les boutons du site.
 INCIDENT_TRIGGERS = {
-    "air":       {"command": "TRIGGER_AIR",       "name": "Fuite d'air (O2)",    "level": "critique"},
+    "air":       {"command": "TOGGLE_AIR",        "name": "Fuite d'air (O2)",    "level": "critique"},
     "fire":      {"command": "TRIGGER_FIRE",       "name": "Incendie",            "level": "haute"},
     "power":     {"command": "TRIGGER_POWER",      "name": "Panne electrique",    "level": "haute"},
     "intrusion": {"command": "TRIGGER_INTRUSION",  "name": "Intrusion",           "level": "moyenne"},
